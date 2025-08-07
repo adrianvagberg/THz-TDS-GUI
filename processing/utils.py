@@ -127,3 +127,22 @@ def objective_function(x, frequency, complex_ratio, thickness, j):
 
     return error_mag**2 + error_phase**2
 
+def svg_to_offset_image(svg_path: str, width: int = 16, height: int = 10):
+    from matplotlib.offsetbox import OffsetImage
+    from PyQt6.QtGui import QPixmap, QPainter
+    from PyQt6.QtSvg import QSvgRenderer
+    from PyQt6.QtCore import Qt
+
+    renderer = QSvgRenderer(svg_path)
+    image = QPixmap(width, height)
+    image.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(image)
+    renderer.render(painter)
+    painter.end()
+
+    # Convert to numpy array
+    image_bytes = image.toImage().bits().asstring(image.width() * image.height() * 4)
+    arr = np.frombuffer(image_bytes, dtype=np.uint8).reshape((height, width, 4))
+
+    return OffsetImage(arr, zoom=1)
+

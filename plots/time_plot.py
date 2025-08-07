@@ -3,6 +3,10 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QCursor
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+import matplotlib.image as mpimg
+from processing.utils import svg_to_offset_image
+import os
 
 
 class TimeDomainPlot(QWidget):
@@ -19,6 +23,11 @@ class TimeDomainPlot(QWidget):
         layout.addWidget(self.canvas)
 
         self.trunc_line = None
+        self.trunc_icon_box = None
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '../res/slider_icon.svg')
+        self.trunc_icon_img = svg_to_offset_image(filename, width = 16, height = 10)
+
         self._dragging = False
         self._drag_threshold = 1 # ps
         self.canvas.mpl_connect('button_press_event', self.on_press)
@@ -33,7 +42,19 @@ class TimeDomainPlot(QWidget):
         self.ax.plot(t, E_ref, color='blue', label='Reference', linewidth=1)
         self.ax.plot(t, E_sam, color='red', label='Sample', linewidth=1)
 
-        self.trunc_line = self.ax.axvline(self.model.trunc_time_ps, color='k')
+        trunc_x = self.model.trunc_time_ps
+        self.trunc_line = self.ax.axvline(trunc_x, color='k')
+        y = self.ax.get_ylim()
+        trunc_y = y[0] + 0.15 * (y[1] - y[0])
+        self.trunc_icon_box = AnnotationBbox(
+            self.trunc_icon_img,
+            (trunc_x, trunc_y),
+            frameon=False,
+            box_alignment=(0.5, 0.5),
+            zorder=10
+        )
+        self.ax.add_artist(self.trunc_icon_box)
+
         self.ax.set_xlabel("Time (ps)")
         self.ax.set_ylabel("E-field (V)")
         self.ax.legend()
@@ -64,6 +85,11 @@ class TimeDomainPlot(QWidget):
         # Handle dragging
         if self._dragging:
             self.trunc_line.set_xdata([event.xdata])
+            if self.trunc_icon_box:
+                y = self.ax.get_ylim()
+                trunc_y = y[0] + 0.15 * (y[1] - y[0])
+                self.trunc_icon_box.xy = (event.xdata, trunc_y)
+                self.trunc_icon_box.xybox = (event.xdata, trunc_y)
             self.model.update_truncation(event.xdata)
             self.truncation_changed.emit()
             self.canvas.draw_idle()
@@ -75,4 +101,3 @@ class TimeDomainPlot(QWidget):
             self.canvas.setCursor(QCursor(Qt.CursorShape.SizeHorCursor))  # resize icon
         else:
             self.canvas.setCursor(QCursor(Qt.CursorShape.ArrowCursor))  # normal pointer
-
