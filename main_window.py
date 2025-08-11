@@ -328,7 +328,7 @@ class MainWindow(QMainWindow):
 
     def initialize_plots(self):
         self.time_plot.ax.set_xlabel("Time (ps)")
-        self.time_plot.ax.set_ylabel("E-field (V)")
+        self.time_plot.ax.set_ylabel("Amplitude (V)")
         self.fft_plot.ax.set_xlabel("Frequency (THz)")
         self.fft_plot.ax.set_ylabel("Amplitude")
         self.phase_plot.ax.set_xlabel("Frequency (THz)")

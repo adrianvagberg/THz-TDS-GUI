@@ -56,7 +56,7 @@ class TimeDomainPlot(QWidget):
         self.ax.add_artist(self.trunc_icon_box)
 
         self.ax.set_xlabel("Time (ps)")
-        self.ax.set_ylabel("E-field (V)")
+        self.ax.set_ylabel("Amplitude (V)")
         self.ax.legend()
         self.ax.grid(True)
         self.fig.tight_layout()
